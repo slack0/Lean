@@ -541,7 +541,7 @@ namespace QuantConnect.Algorithm
                     equity = AddEquity(underlying.Value, option.Resolution, underlying.ID.Market, false);
                 }
                 // In the options trading, the strike price, the options settlement and exercise are
-                // all based on the raw price of the underlying asset instead of the adjusted price. 
+                // all based on the raw price of the underlying asset instead of the adjusted price.
                 // In order to select the accurate contracts, we need to set
                 // the data normalization mode of the underlying asset to be raw
                 else if (equity.DataNormalizationMode != DataNormalizationMode.Raw)
@@ -954,7 +954,7 @@ namespace QuantConnect.Algorithm
         /// <param name="accountType">The account type (Cash or Margin)</param>
         public void SetBrokerageModel(BrokerageName brokerage, AccountType accountType = AccountType.Margin)
         {
-            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType));
+            SetBrokerageModel(Brokerages.BrokerageModel.Create(brokerage, accountType, Portfolio.CashBook));
         }
 
         /// <summary>

@@ -1,5 +1,20 @@
 # For moving avg types: https://github.com/QuantConnect/Lean/blob/bc9af8784b02715000a2030e9757ef63b484378e/Indicators/MovingAverageType.cs
+
+from clr import AddReference
+AddReference("System")
+AddReference("QuantConnect.Algorithm")
+AddReference("QuantConnect.Common")
+
+from System import *
+from QuantConnect import *
+from QuantConnect.Algorithm import *
+import numpy as np
+
 import QuantConnect.Indicators as ind
+from QuantConnect.Brokerages import BrokerageName
+from QuantConnect.Data.Consolidators import TradeBarConsolidator
+from QuantConnect.Orders import OrderDirection
+
 import pprint
 
 
@@ -8,15 +23,15 @@ class IndicatorAlgo(QCAlgorithm):
         #####################
         # Backtest Settings #
         #####################
-        self.SetStartDate(2017, 7, 7)  # Set Start Date
-        self.SetEndDate(2018, 1, 2)  # Set End Date
+        self.SetStartDate(2016, 10, 7)  # Set Start Date
+        self.SetEndDate(2016, 10, 8)  # Set End Date
         self.SetCash(1000)  # Set Strategy Cash
         self.SetBrokerageModel(BrokerageName.GDAX)
 
         ###########################
         # Configurable parameters #
         ###########################
-        self.target_crypto = "ETHUSD"  # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
+        self.target_crypto = "BTCUSD"  # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
         self.indicator_name = "macd"  # bollinger, momentum, or MACD
         self.warmup_lookback = 30  # Number of time periods resolution to load
         self.time_resolution = Resolution.Minute  # Resolution of periods/data to use
@@ -24,7 +39,7 @@ class IndicatorAlgo(QCAlgorithm):
         self.bar_size = 5
 
         # Bollinger Variables
-        self.moving_average_type = MovingAverageType.Exponential
+        self.moving_average_type = ind.MovingAverageType.Exponential
         self.bollinger_period = 20
         self.k = 2
 
@@ -37,7 +52,7 @@ class IndicatorAlgo(QCAlgorithm):
         self.MACD_fast_period = 12
         self.MACD_slow_period = 26
         self.MACD_signal_period = 9
-        self.MACD_moving_average_type = MovingAverageType.Exponential
+        self.MACD_moving_average_type = ind.MovingAverageType.Exponential
         self.MACD_tolerance = 0.0025
 
         # Ichimoku Variables

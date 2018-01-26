@@ -45,7 +45,16 @@ class Optimizer(object):
                 self.param_grid.append(config_inst)
 
     def run(self):
-        pass
+        pp = pprint.PrettyPrinter(indent=4)
+        for config_inst in self.param_grid:
+            pp.pprint('Generating and executing config:')
+            pp.pprint(config_inst)
+            fp = open('config_inst.json','w')
+            json.dump(config_inst, fp)
+            fp.close()
+
+            ### call Crypto/main.py
+
 
     def __repr__(self):
         return json.dumps(self.params)

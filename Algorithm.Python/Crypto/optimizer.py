@@ -2,13 +2,13 @@ from __future__ import division
 from __future__ import with_statement
 
 import numpy as np
-import pprint
-import json
-import os
-import sys
-
 import sklearn
 from sklearn.model_selection import ParameterGrid
+
+import pprint
+import json
+import sys
+import os
 
 class Optimizer(object):
     def __init__(self, params_json):
@@ -46,11 +46,21 @@ class Optimizer(object):
 
     def run(self):
         pp = pprint.PrettyPrinter(indent=4)
-        for config_inst in self.param_grid:
+
+        cwd = os.path.dirname(os.path.realpath(__file__))
+        config_dir = os.path.join(cwd,'configs')
+        os.mkdir(config_dir)
+
+        for config in self.param_grid:
             pp.pprint('Generating and executing config:')
-            pp.pprint(config_inst)
-            fp = open('config_inst.json','w')
-            json.dump(config_inst, fp)
+            pp.pprint(config)
+
+            '''
+            export JSON
+            '''
+            config_file = os.path.join(config_dir,'config.json')
+            fp = open(config_file,'w')
+            json.dump(config, fp)
             fp.close()
 
             ### call Crypto/main.py

@@ -15,11 +15,21 @@ from QuantConnect.Brokerages import BrokerageName
 from QuantConnect.Data.Consolidators import TradeBarConsolidator
 from QuantConnect.Orders import OrderDirection
 
-import pprint
-
+import json
+import os
 
 class IndicatorAlgo(QCAlgorithm):
     def Initialize(self):
+        self.cwd = os.path.dirname(os.path.realpath(__file__))
+        self.config_file = os.path.join(self.cwd,'configs','config.json')
+        self.runconfig = {}
+
+        try:
+            fp = open(self.config_file, 'r')
+            self.runconfig = json.load(fp)
+        except IOError:
+            print('config file: {} not found. Continuing with pre-configured settings'.format(self.config_file))
+
         #####################
         # Backtest Settings #
         #####################
@@ -31,37 +41,127 @@ class IndicatorAlgo(QCAlgorithm):
         ###########################
         # Configurable parameters #
         ###########################
-        self.target_crypto = "BTCUSD"  # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
-        self.indicator_name = "macd"  # bollinger, momentum, or MACD
-        self.warmup_lookback = 30  # Number of time periods resolution to load
-        self.time_resolution = Resolution.Minute  # Resolution of periods/data to use
-        self.resubmit_order_threshold = .01  # Percent at which we will update the limit order to cause a fill
-        self.bar_size = 5
+        # Can be ETHUSD, LTCUSD, BTCUSD, or BCCUSD
+        if '__TARGET_CRYPTOS__' in self.runconfig:
+            self.target_crypto = str(self.runconfig['__TARGET_CRYPTOS__'])
+        else:
+            self.target_crypto = "BTCUSD"
+
+        # bollinger, momentum, or MACD
+        if '__INDICATORS__' in self.runconfig:
+            self.indicator_name = str(self.runconfig['__INDICATORS__'])
+        else:
+            self.indicator_name = "macd"
+
+        # Number of time periods resolution to load
+        if '__WARMUP_LOOKBACK__' in self.runconfig:
+            self.warmup_lookback = self.runconfig['__WARMUP_LOOKBACK__']
+        else:
+            self.warmup_lookback = 30
+
+        # Resolution of periods/data to use
+        self.time_resolution = Resolution.Minute
+
+        # Percent at which we will update the limit order to cause a fill
+        if '__RESUBMIT_ORDER_THRESHOLD__' in self.runconfig:
+            self.resubmit_order_threshold = self.runconfig['__RESUBMIT_ORDER_THRESHOLD__']
+        else:
+            self.resubmit_order_threshold = 0.01
+
+        # Bar size
+        if '__BAR_SIZE__' in self.runconfig:
+            self.bar_size = self.runconfig['__BAR_SIZE__']
+        else:
+            self.bar_size = 5
 
         # Bollinger Variables
-        self.moving_average_type = ind.MovingAverageType.Exponential
-        self.bollinger_period = 20
-        self.k = 2
+        if 'MOVING_AVERAGE_TYPE' in self.runconfig:
+            self.moving_average_type = getattr(ind, str(self.runconfig['MOVING_AVERAGE_TYPE']))
+        else:
+            self.moving_average_type = ind.MovingAverageType.Exponential
+
+        if 'BOLLINGER_PERIOD' in self.runconfig:
+            self.bollinger_period = self.runconfig['BOLLINGER_PERIOD']
+        else:
+            self.bollinger_period = 20
+
+        if 'BOLLINGER_K' in self.runconfig:
+            self.k = self.runconfig['BOLLINGER_K']
+        else:
+            self.k = 2
 
         # Momentum Variables
-        self.momentum_period = 5
-        self.momentum_buy_threshold = 2
-        self.momentum_sell_threshold = 0
+        if 'MOMENTUM_PERIOD' in self.runconfig:
+            self.momentum_period = self.runconfig['MOMENTUM_PERIOD']
+        else:
+            self.momentum_period = 5
+
+        if 'MOMENTUM_BUY_THRESHOLD' in self.runconfig:
+            self.momentum_buy_threshold = self.runconfig['MOMENTUM_BUY_THRESHOLD']
+        else:
+            self.momentum_buy_threshold = 2
+
+        if 'MOMENTUM_SELL_THRESHOLD' in self.runconfig:
+            self.momentum_sell_threshold = self.runconfig['MOMENTUM_SELL_THRESHOLD']
+        else:
+            self.momentum_sell_threshold = 0
 
         # MACD Variables
-        self.MACD_fast_period = 12
-        self.MACD_slow_period = 26
-        self.MACD_signal_period = 9
-        self.MACD_moving_average_type = ind.MovingAverageType.Exponential
-        self.MACD_tolerance = 0.0025
+        if 'MACD_FAST_PERIOD' in self.runconfig:
+            self.MACD_fast_period = self.runconfig['MACD_FAST_PERIOD']
+        else:
+            self.MACD_fast_period = 12
+
+        if 'MACD_SLOW_PERIOD' in self.runconfig:
+            self.MACD_slow_period = self.runconfig['MACD_SLOW_PERIOD']
+        else:
+            self.MACD_slow_period = 26
+
+        if 'MACD_SIGNAL_PERIOD' in self.runconfig:
+            self.MACD_signal_period = self.runconfig['MACD_SIGNAL_PERIOD']
+        else:
+            self.MACD_signal_period = 9
+
+        if 'MACD_MOVING_AVERAGE_TYPE' in self.runconfig:
+            self.MACD_moving_average_type = getattr(ind, str(self.runconfig['MACD_MOVING_AVERAGE_TYPE']))
+        else:
+            self.MACD_moving_average_type = ind.MovingAverageType.Exponential
+
+        if 'MACD_TOLERANCE' in self.runconfig:
+            self.MACD_tolerance = self.runconfig['MACD_TOLERANCE']
+        else:
+            self.MACD_tolerance = 0.0025
 
         # Ichimoku Variables
-        self.tenkanPeriod = 9
-        self.kijunPeriod = 26
-        self.senkouAPeriod = 26
-        self.senkouBPeriod = 52
-        self.senkouADelayedPeriod = 26
-        self.senkouBDelayedPeriod = 26
+        if 'TENKAN_PERIOD' in self.runconfig:
+            self.tenkanPeriod = self.runconfig['TENKAN_PERIOD']
+        else:
+            self.tenkanPeriod = 9
+
+        if 'KIJUN_PERIOD' in self.runconfig:
+            self.kijunPeriod = self.runconfig['KIJUN_PERIOD']
+        else:
+            self.kijunPeriod = 26
+
+        if 'SENKOU_A_PERIOD' in self.runconfig:
+            self.senkouAPeriod = self.runconfig['SENKOU_A_PERIOD']
+        else:
+            self.senkouAPeriod = 26
+
+        if 'SENKOU_B_PERIOD' in self.runconfig:
+            self.senkouBPeriod = self.runconfig['SENKOU_B_PERIOD']
+        else:
+            self.senkouBPeriod = 52
+
+        if 'SENKOU_A_DELAYED_PERIOD' in self.runconfig:
+            self.senkouADelayedPeriod = self.runconfig['SENKOU_A_DELAYED_PERIOD']
+        else:
+            self.senkouADelayedPeriod = 26
+
+        if 'SENKOU_B_DELAYED_PERIOD' in self.runconfig:
+            self.senkouBDelayedPeriod = self.runconfig['SENKOU_B_DELAYED_PERIOD']
+        else:
+            self.senkouBDelayedPeriod = 26
 
         ############################
         # Indicators and processes #
